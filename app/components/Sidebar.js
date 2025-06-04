@@ -37,9 +37,9 @@ const Sidebar = () => {
   const menuItems = [
     { name: "Dashboard", icon: Home, link: "/admin/Dashboard", path: "Dashboard" },
     { name: "Services", icon: Box, link: "/admin/Services", path: "Services" },
-    { name: "Facilities", icon: Building, link: "/admin/Facilities", path: "Facilities" },
-    { name: "Doctor List", icon: ScrollText, link: "/admin/DoctorList", path: "DoctorsList" },
-    { name: "Staff", icon: Users, link: "/admin/Staff", path: "Staff" },
+    // { name: "Facilities", icon: Building, link: "/admin/Facilities", path: "Facilities" },
+    // { name: "Doctor List", icon: ScrollText, link: "/admin/DoctorList", path: "DoctorsList" },
+    // { name: "Staff", icon: Users, link: "/admin/Staff", path: "Staff" },
     { name: "Patients History", icon: Users, link: "/admin/Patients", path: "Patients" },
     { name: "Appointments", icon: FileText, link: "/admin/Appointments", path: "Appointments" },
     { name: "Events", icon: CalendarCheck, link: "/admin/Events", path: "Events" },
