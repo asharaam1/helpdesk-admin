@@ -9,7 +9,7 @@ import { auth } from "@/app/utils/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import Link from "next/link";
 
-const LoginPage = () => {
+const AdminLoginPage = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +18,7 @@ const LoginPage = () => {
   const router = useRouter();
 
   const getUser = async () => {
-    const user = await localStorage.getItem("userId");
+    const user = await localStorage.getItem("adminId");
     if (user !== null) router.push("/admin/Dashboard");
     setTimeout(() => setIsCheckingUser(false), 1000);
   };
@@ -40,7 +40,7 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const res = await signInWithEmailAndPassword(auth, email, password);
-      localStorage.setItem("userId", res.user.uid);
+      localStorage.setItem("adminId", res.user.uid);
       router.push("/admin/Dashboard");
     } catch (err) {
       toast.error(err.message);
@@ -64,11 +64,11 @@ const LoginPage = () => {
         <div className="w-full bg-white rounded-xl p-8 md:max-w-md space-y-6 md:shadow-none shadow shadow-[#343434]/30">
           <div className="flex justify-center space-x-4 items-center">
             <Image src="/Logo.png" alt="Logo" width={50} height={50} />
-            <h2 className="text-2xl font-bold text-[#000000] tracking-tight">Lift Humanity</h2>
+            <h2 className="text-2xl font-bold text-[#000000] tracking-tight">Admin Portal</h2>
           </div>
 
           <p className="text-center text-sm text-[#343434] mb-4">
-            Please log in to access your dashboard.
+            Please log in to access your admin dashboard.
           </p>
 
           <div>
@@ -78,7 +78,7 @@ const LoginPage = () => {
             <input
               type="email"
               id="email"
-              placeholder="Email Address"
+              placeholder="Admin Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff5528] transition-all"
@@ -106,8 +106,8 @@ const LoginPage = () => {
           </div>
 
           <p className="text-sm text-[#343434]">
-            Don't have an account?{" "}
-            <Link href="/auth/SignUp" className="text-[#ff5528] hover:underline">
+            Need an admin account?{" "}
+            <Link href="/auth/AdminSignUp" className="text-[#ff5528] hover:underline">
               Sign up here
             </Link>
           </p>
@@ -120,17 +120,24 @@ const LoginPage = () => {
             {isLoading ? (
               <Loader2 className="animate-spin h-5 w-5 text-white" />
             ) : (
-              "Login"
+              "Admin Login"
             )}
           </button>
+
+          <p className="text-sm text-center text-[#343434]">
+            Not an admin?{" "}
+            <Link href="/auth/Login" className="text-[#ff5528] hover:underline">
+              User Login
+            </Link>
+          </p>
         </div>
       </div>
 
       {/* Side Image */}
       <div className="hidden md:flex w-3/4 h-full relative items-center justify-center overflow-hidden rounded-r-3xl">
         <Image
-          src="/mmtrust.jpg"
-          alt="login page image"
+          src="/admin-login.jpg"
+          alt="admin login page image"
           fill
           className="object-cover rounded-r-3xl"
         />
@@ -142,4 +149,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default AdminLoginPage; 

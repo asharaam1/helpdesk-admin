@@ -15,10 +15,16 @@ import {
   HeartPulse,
   Newspaper,
   Users,
+  Loader2,
+  FileCheck,
+  LogOut,
 } from "lucide-react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/app/utils/firebaseConfig";
 import { useAppContext } from "@/app/context/useContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function DashboardPage() {
   const {
@@ -31,6 +37,12 @@ export default function DashboardPage() {
     reviews,
   } = useAppContext();
   const [appoints, setAppoints] = useState([]);
+  const router = useRouter();
+  const [stats, setStats] = useState({
+    pendingNeedy: 0,
+    pendingKYC: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   const excellentReviews = reviews.filter((item) => item.label === "Excellent");
   const poorReviews = reviews.filter((item) => item.label === "Poor");
@@ -52,242 +64,165 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
 
+  const fetchStats = async () => {
+    try {
+      // Fetch pending needy users count
+      const needyQuery = query(
+        collection(db, "needyUsers"),
+        where("status", "==", "pending")
+      );
+      const needySnapshot = await getDocs(needyQuery);
+      
+      // Fetch pending KYC requests count
+      const kycQuery = query(
+        collection(db, "kycRequests"),
+        where("status", "==", "pending")
+      );
+      const kycSnapshot = await getDocs(kycQuery);
+
+      setStats({
+        pendingNeedy: needySnapshot.size,
+        pendingKYC: kycSnapshot.size,
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminId");
+    router.push("/auth/AdminLogin");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin h-8 w-8 text-gray-800" />
+      </div>
+    );
+  }
+
   return (
-    // <div className="p-2 min-h-screen bg-[#0190de]">
-    <div className="mx-auto px-4 space-y-4">
-      <div className="mb-8">
-        <h1 className="md:text-3xl text-2xl font-[SairaSemibold] text-gray-900">
-          DASHBOARD 👋
-        </h1>
-        <p className="text-sm mb-5 text-muted-foreground font-[SairaRegular]">
-          Keep track of patient updates for the last 7 days. Have a nice day!
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <Image
+                src="/Logo.png"
+                alt="Logo"
+                width={40}
+                height={40}
+                className="mr-3"
+              />
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-[#0190de]">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="md:text-sm font-[SairaMedium] text-muted-foreground mb-1">
-                  Appointments
-                </p>
-                <div className="flex items-center gap-2">
-                  <h3 className="md:text-2xl font-[SairaSemibold]">
-                    0{appointments?.length}
-                  </h3>
-                  <span className="text-xs px-2 py-1 rounded-full font-[SairaRegular] bg-[#0190de] text-white">
-                    +2.5%
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Needy Approval Card */}
+          <Link href="/admin/NeedyApproval">
+            <div className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="ml-5">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Pending Needy Approvals
+                      </dt>
+                      <dd className="mt-1 text-3xl font-semibold text-gray-900">
+                        {stats.pendingNeedy}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-5 py-3">
+                <div className="text-sm">
+                  <span className="font-medium text-blue-700 hover:text-blue-900">
+                    View all pending approvals →
                   </span>
                 </div>
               </div>
-              <FileText />
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-[#0190de]">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-[SairaMedium] text-muted-foreground mb-1">
-                  Donations
-                </p>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-2xl font-[SairaSemibold]">
-                    0{donations?.length}
-                  </h3>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#0190de] text-white">
-                    +5.4%
-                  </span>
-                </div>
-              </div>
-              <HandHeart />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-[#0190de]">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-[SairaMedium] text-muted-foreground mb-1">
-                  Total Doctors
-                </p>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-2xl font-[SairaSemibold]">
-                    0{doctors?.length}
-                  </h3>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#0190de] text-white">
-                    +4.1%
-                  </span>
-                </div>
-              </div>
-              <HeartPulse />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-[#0190de]">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-[SairaMedium] text-muted-foreground mb-1">
-                  Total Staff
-                </p>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-2xl font-[SairaSemibold]">
-                    0{staff?.length}
-                  </h3>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#0190de] text-white">
-                    +3.5%
-                  </span>
-                </div>
-              </div>
-              <Users />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </Link>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardContent className="py-6">
-            <PatientStats />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <h3 className="font-[SairaSemibold] text-xl mb-4">
-              Patients Satisfactions
-            </h3>
-            <div className="mb-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-[SairaSemibold]">
-                  0{reviews?.length}
-                </h2>
-                <div className="flex items-center gap-2 text-green-600">
-                  <span className="text-lg font-semibold">+3.3%</span>
-                  <span className="text-sm text-gray-500">
-                    Generated by clients
-                  </span>
+          {/* KYC Approval Card */}
+          <Link href="/admin/KYCApproval">
+            <div className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <FileCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="ml-5">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Pending KYC Verifications
+                      </dt>
+                      <dd className="mt-1 text-3xl font-semibold text-gray-900">
+                        {stats.pendingKYC}
+                      </dd>
+                    </dl>
+                  </div>
                 </div>
               </div>
-              <div className="w-full h-4 rounded-full overflow-hidden mt-2 flex">
-                <div
-                  className="bg-green-500"
-                  style={{
-                    width: reviews?.length
-                      ? `${(excellentReviews?.length * 100) / reviews?.length}%`
-                      : "0%",
-                  }}
-                ></div>
-                <div
-                  className="bg-blue-400"
-                  style={{
-                    width: reviews?.length
-                      ? `${(veryGoodReviews?.length * 100) / reviews?.length}%`
-                      : "0%",
-                  }}
-                ></div>
-                <div
-                  className="bg-orange-400"
-                  style={{
-                    width: reviews?.length
-                      ? `${(goodReviews?.length * 100) / reviews?.length}%`
-                      : "0%",
-                  }}
-                ></div>
-                <div
-                  className="bg-yellow-400"
-                  style={{
-                    width: reviews?.length
-                      ? `${(fineReviews?.length * 100) / reviews?.length}%`
-                      : "0%",
-                  }}
-                ></div>
-                <div
-                  className="bg-gray-500"
-                  style={{
-                    width: reviews?.length
-                      ? `${(poorReviews?.length * 100) / reviews?.length}%`
-                      : "0%",
-                  }}
-                ></div>
+              <div className="bg-gray-50 px-5 py-3">
+                <div className="text-sm">
+                  <span className="font-medium text-green-700 hover:text-green-900">
+                    View all KYC requests →
+                  </span>
+                </div>
               </div>
             </div>
-            <ul className="space-y-2 font-[SairaMedium]">
-              <li className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                  <span className="font-[SairaMedium]">Excellent</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">
-                    0{excellentReviews?.length}
-                  </span>
-                  <span className="text-gray-500">
-                    {(excellentReviews?.length * 100) / reviews?.length}%
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 bg-blue-400 rounded-full"></span>
-                  <span className="font-[SairaMedium]">Very Good</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">
-                    0{veryGoodReviews?.length}
-                  </span>
-                  <span className="text-gray-500">
-                    {(veryGoodReviews?.length * 100) / reviews?.length}%
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 bg-orange-400 rounded-full"></span>
-                  <span className="font-[SairaMedium]">Good</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">0{goodReviews?.length}</span>
-                  <span className="text-gray-500">
-                    {(goodReviews?.length * 100) / reviews?.length}%
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
-                  <span className="font-[SairaMedium]">Fair</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">0{fineReviews?.length}</span>
-                  <span className="text-gray-500">
-                    {(fineReviews?.length * 100) / reviews?.length}%
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
-                  <span className="font-[SairaMedium]">Poor</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">0{poorReviews?.length}</span>
-                  <span className="text-gray-500">
-                    {(poorReviews?.length * 100) / reviews?.length}%
-                  </span>
-                </div>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+          </Link>
+        </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <AppointmentList appointments={appoints} />
-        </CardContent>
-      </Card>
+        {/* Recent Activity Section */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Link href="/admin/NeedyApproval">
+              <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                <h3 className="font-medium text-gray-900">Review Needy Applications</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Approve or reject pending needy user applications
+                </p>
+              </div>
+            </Link>
+            <Link href="/admin/KYCApproval">
+              <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                <h3 className="font-medium text-gray-900">Process KYC Requests</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Verify and approve pending KYC documentation
+                </p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
