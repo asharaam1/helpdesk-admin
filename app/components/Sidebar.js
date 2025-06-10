@@ -23,6 +23,7 @@ import {
   Contact,
   UserPlus,
   Bell,
+  Settings2
 } from "lucide-react";
 import { auth } from "../utils/firebaseConfig";
 import { usePathname, useRouter } from "next/navigation";
@@ -49,6 +50,8 @@ const Sidebar = () => {
     { name: "Web Subscribers", icon: UserPlus, link: "/admin/Subscribers", path: "Subscribers" },
     { name: "Notifications", icon: Bell, link: "/admin/Notification", path: "Notification" },
     { name: "Users", icon: Users, link: "/admin/Users", path: "Users" },
+    { name: "Settings", icon: Settings2, link: "/admin/Settings", path: "Settings" },
+
   ];
 
   const handleMenuClick = () => {
