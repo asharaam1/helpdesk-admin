@@ -5,7 +5,7 @@ import { auth, db } from "../../utils/firebaseConfig";
 import { User, Lock, Eye, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { doc, setDoc } from "firebase/firestore";
+import { addDoc, doc, setDoc } from "firebase/firestore";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -21,6 +21,13 @@ const SignUpPage = () => {
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
+
+  // const AddUserToFirestore = async(){
+
+  //     addDoc
+           
+
+  // }
 
   const handleSignUp = async () => {
     if (!email || !password || !name) {

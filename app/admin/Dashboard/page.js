@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { PatientStats } from "../../components/Patients-Stats";
 import { AppointmentList } from "../../components/Appointment-List";
+import {  getDocs } from "firebase/firestore";
 import {
   ArrowUpDown,
   ClipboardList,
@@ -37,12 +38,16 @@ export default function DashboardPage() {
     reviews,
   } = useAppContext();
   const [appoints, setAppoints] = useState([]);
+
   const router = useRouter();
   const [stats, setStats] = useState({
     pendingNeedy: 0,
     pendingKYC: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  const [totalDonations, setTotalDonations] = useState(0);
+
 
   const excellentReviews = reviews.filter((item) => item.label === "Excellent");
   const poorReviews = reviews.filter((item) => item.label === "Poor");
@@ -51,6 +56,25 @@ export default function DashboardPage() {
   const fineReviews = reviews.filter((item) => item.label === "Fine");
 
   useEffect(() => {
+
+
+// ==================== FOR TOTAL DONATIONS  =====================
+
+  const fetchDonations = async () => {
+    let total = 0;
+    const querySnapshot = await getDocs(collection(db, "donations"));
+    querySnapshot.forEach((doc) => {
+      total += doc.data().amount || 0;
+    });
+    setTotalDonations(total);
+  };
+
+  fetchDonations();
+
+
+// ==================== FOR TOTAL DONATIONS =====================
+
+
     const appointCollection = collection(db, "Appointments");
 
     const unsubscribe = onSnapshot(appointCollection, (snapshot) => {
@@ -159,10 +183,12 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
                   <span className="font-medium text-blue-700 hover:text-blue-900">
                     View all pending approvals →
+
                   </span>
                 </div>
               </div>
