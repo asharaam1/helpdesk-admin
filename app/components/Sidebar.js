@@ -49,7 +49,9 @@ const Sidebar = () => {
     { name: "Contact Inqueries", icon: Contact, link: "/admin/ContactInqueries", path: "ContactInqueries" },
     { name: "Web Subscribers", icon: UserPlus, link: "/admin/Subscribers", path: "Subscribers" },
     { name: "Notifications", icon: Bell, link: "/admin/Notification", path: "Notification" },
+    { name: "Users", icon: Users, link: "/admin/Users", path: "Users" },
     { name: "Settings", icon: Settings2, link: "/admin/Settings", path: "Settings" },
+
   ];
 
   const handleMenuClick = () => {
