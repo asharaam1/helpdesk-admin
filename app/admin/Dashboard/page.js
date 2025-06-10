@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { PatientStats } from "../../components/Patients-Stats";
 import { AppointmentList } from "../../components/Appointment-List";
-import {  getDocs } from "firebase/firestore";
 import {
   ArrowUpDown,
   ClipboardList,

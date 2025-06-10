@@ -56,7 +56,7 @@ const SignUpPage = () => {
       {/* Left Side Image */}
       <div className="hidden md:flex w-1/2 h-full relative overflow-hidden rounded-r-3xl">
         <Image
-          src="/login.jpg"
+          src="/donate.png"
           fill
           alt="Login Background"
           className="object-cover"
@@ -68,7 +68,7 @@ const SignUpPage = () => {
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6">
         <div className="mb-6 text-center w-32 h-20 md:w-40 md:h-24 relative">
           <Image
-            src="/Logo.png" 
+            src="/logo-donation.png" 
             alt="Logo"
             fill
             className="object-contain"

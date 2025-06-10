@@ -63,7 +63,7 @@ const LoginPage = () => {
       <div className="md:w-2/4 md:h-full h-3/4 flex justify-center items-center p-8">
         <div className="w-full bg-white rounded-xl p-8 md:max-w-md space-y-6 md:shadow-none shadow shadow-[#343434]/30">
           <div className="flex justify-center space-x-4 items-center">
-            <Image src="/Logo.png" alt="Logo" width={50} height={50} />
+            <Image src="/logo-donation.png" alt="Logo" width={50} height={50} />
             <h2 className="text-2xl font-bold text-[#000000] tracking-tight">Lift Humanity</h2>
           </div>
 
@@ -129,7 +129,7 @@ const LoginPage = () => {
       {/* Side Image */}
       <div className="hidden md:flex w-3/4 h-full relative items-center justify-center overflow-hidden rounded-r-3xl">
         <Image
-          src="/mmtrust.jpg"
+          src="/help-needy.jpg"
           alt="login page image"
           fill
           className="object-cover rounded-r-3xl"
