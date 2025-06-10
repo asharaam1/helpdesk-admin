@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { PatientStats } from "../../components/Patients-Stats";
 import { AppointmentList } from "../../components/Appointment-List";
+import {  getDocs } from "firebase/firestore";
 import {
   ArrowUpDown,
   ClipboardList,
@@ -31,6 +32,7 @@ export default function DashboardPage() {
     reviews,
   } = useAppContext();
   const [appoints, setAppoints] = useState([]);
+  const [totalDonations, setTotalDonations] = useState(0);
 
   const excellentReviews = reviews.filter((item) => item.label === "Excellent");
   const poorReviews = reviews.filter((item) => item.label === "Poor");
@@ -39,6 +41,25 @@ export default function DashboardPage() {
   const fineReviews = reviews.filter((item) => item.label === "Fine");
 
   useEffect(() => {
+
+
+// ==================== FOR TOTAL DONATIONS  =====================
+
+  const fetchDonations = async () => {
+    let total = 0;
+    const querySnapshot = await getDocs(collection(db, "donations"));
+    querySnapshot.forEach((doc) => {
+      total += doc.data().amount || 0;
+    });
+    setTotalDonations(total);
+  };
+
+  fetchDonations();
+
+
+// ==================== FOR TOTAL DONATIONS =====================
+
+
     const appointCollection = collection(db, "Appointments");
 
     const unsubscribe = onSnapshot(appointCollection, (snapshot) => {
@@ -94,7 +115,7 @@ export default function DashboardPage() {
                 </p>
                 <div className="flex items-center gap-2">
                   <h3 className="text-2xl font-[SairaSemibold]">
-                    0{donations?.length}
+                    {totalDonations&& "00"}
                   </h3>
                   <span className="text-xs px-2 py-1 rounded-full bg-[#0190de] text-white">
                     +5.4%
