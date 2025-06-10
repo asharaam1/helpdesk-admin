@@ -43,7 +43,7 @@ export default function RoleManagement() {
       <tbody>
         {users.map((user) => (
           <tr key={user.id}>
-            <td>{user.name || "No Name"}</td>
+            <td>{user.fullName || "No Name"}</td>
             <td>{user.email}</td>
             <td>{user.role || "None"}</td>
             <td>

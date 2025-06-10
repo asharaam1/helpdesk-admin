@@ -82,7 +82,7 @@ const Sidebar = () => {
         </div>
 
         <div className="p-8">
-          <img src="/mmt-logo-processed.png" alt="Logo" />
+          <img src="/logo-donation.png" alt="Logo" />
         </div>
 
         <nav className="flex-1">
