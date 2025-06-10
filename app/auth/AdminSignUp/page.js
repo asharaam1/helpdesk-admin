@@ -5,12 +5,12 @@ import { auth, db } from "../../utils/firebaseConfig";
 import { User, Lock, Eye, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { addDoc, doc, setDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const SignUpPage = () => {
+const AdminSignUpPage = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,13 +21,6 @@ const SignUpPage = () => {
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
-
-  // const AddUserToFirestore = async(){
-
-  //     addDoc
-           
-
-  // }
 
   const handleSignUp = async () => {
     if (!email || !password || !name) {
@@ -42,7 +35,12 @@ const SignUpPage = () => {
         password
       );
       const uid = response.user.uid;
-      await setDoc(doc(db, "adminUsers", uid), { name, email });
+      await setDoc(doc(db, "adminUsers", uid), { 
+        name, 
+        email,
+        role: "admin",
+        createdAt: new Date().toISOString()
+      });
       router.push("/admin/Dashboard");
     } catch (error) {
       toast.error(error.message);
@@ -56,9 +54,9 @@ const SignUpPage = () => {
       {/* Left Side Image */}
       <div className="hidden md:flex w-1/2 h-full relative overflow-hidden rounded-r-3xl">
         <Image
-          src="/login.jpg"
+          src="/admin-signup.jpg"
           fill
-          alt="Login Background"
+          alt="Admin Signup Background"
           className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#00000088] to-transparent" />
@@ -77,7 +75,7 @@ const SignUpPage = () => {
 
         <div className="w-full md:w-[70%] bg-white rounded-xl shadow-md p-6 space-y-4">
           <h2 className="text-xl font-semibold text-center text-[#343434]">
-            Create your account
+            Create Admin Account
           </h2>
 
           {/* Name Input */}
@@ -97,7 +95,7 @@ const SignUpPage = () => {
             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="email"
-              placeholder="Email Address"
+              placeholder="Admin Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-10 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ff5528] transition-all"
@@ -128,17 +126,25 @@ const SignUpPage = () => {
             {isLoading ? (
               <Loader2 className="animate-spin h-5 w-5" />
             ) : (
-              "Sign Up →"
+              "Create Admin Account →"
             )}
           </button>
 
-          {/* Redirect Link */}
-          <p className="text-center text-sm text-[#343434]">
-            Already have an account?{" "}
-            <Link href="/auth/Login" className="text-[#ff5528] hover:underline">
-              Login
-            </Link>
-          </p>
+          {/* Redirect Links */}
+          <div className="space-y-2">
+            <p className="text-center text-sm text-[#343434]">
+              Already have an admin account?{" "}
+              <Link href="/auth/AdminLogin" className="text-[#ff5528] hover:underline">
+                Login
+              </Link>
+            </p>
+            <p className="text-center text-sm text-[#343434]">
+              Not an admin?{" "}
+              <Link href="/auth/Login" className="text-[#ff5528] hover:underline">
+                User Login
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
       <ToastContainer />
@@ -146,4 +152,4 @@ const SignUpPage = () => {
   );
 };
 
-export default SignUpPage;
+export default AdminSignUpPage; 
