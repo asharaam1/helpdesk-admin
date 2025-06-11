@@ -35,9 +35,10 @@ const Userpage = () => {
     const [exportFormat, setExportFormat] = useState("csv");
     const [showExportModal, setShowExportModal] = useState(false);
     const [isClient, setIsClient] = useState(false);
+    const [roles] = useState(["admin", "donor", "needy"]);
+    const [selectedRole, setSelectedRole] = useState("user");
 
-    const categories = ['all', ...new Set(data.map(item => item.category))];
-    const roles = ["admin", "manager", "user", "viewer"];
+    const categories = ['all', ...new Set(data.map(item => item.category).filter(Boolean))];
 
     useEffect(() => {
         getUsers();
@@ -134,7 +135,7 @@ const Userpage = () => {
     const convertToCSV = (data) => {
         const headers = ['Name', 'Email', 'Category', 'Role', 'Status', 'Last Active', 'Created At'];
         const rows = data.map(user => [
-            `"${user.name || ''}"`,
+            `"${user.fullName || ''}"`,
             `"${user.email || ''}"`,
             `"${user.category || ''}"`,
             `"${user.role || ''}"`,
@@ -152,7 +153,7 @@ const Userpage = () => {
             
             // Convert data to worksheet format
             const wsData = data.map(user => ({
-                'Name': user.name || '',
+                'Name': user.fullName || '',
                 'Email': user.email || '',
                 'Category': user.category || '',
                 'Role': user.role || '',
@@ -184,16 +185,28 @@ const Userpage = () => {
     };
 
     const updateUserRole = async (userId, newRole) => {
+        if (!userId || !newRole) {
+            alert("Invalid user or role selected");
+            return;
+        }
+
         try {
             await updateDoc(doc(db, "users", userId), { role: newRole });
             getUsers();
             setShowRoleModal(false);
+            alert("User role updated successfully");
         } catch (error) {
             console.error("Error updating user role:", error);
+            alert("Failed to update user role. Please try again.");
         }
     };
 
     const submitDetails = async () => {
+        if (!name || !Email || !category) {
+            alert("Please fill in all fields");
+            return;
+        }
+
         try {
             const docRef = await addDoc(collection(db, "users"), {
                 name: name,
@@ -206,13 +219,14 @@ const Userpage = () => {
             console.log("Document written with ID: ", docRef.id);
             setShowAddModal(false);
             getUsers();
+            // Clear form
+            setName("");
+            setEmail("");
+            setCategory("");
         } catch (e) {
             console.error("Error adding document: ", e);
+            alert("Failed to add user. Please try again.");
         }
-
-        setName("");
-        setEmail("");
-        setCategory("");
     }
 
     const getUsers = async () => {
@@ -226,6 +240,8 @@ const Userpage = () => {
             setData(users);
         } catch (error) {
             console.error("Error fetching users:", error);
+            // Add user-friendly error handling
+            alert("Failed to fetch users. Please try again later.");
         } finally {
             setIsLoading(false);
         }
@@ -247,8 +263,8 @@ const Userpage = () => {
     });
 
     const filteredUsers = sortedUsers.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            item.email.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = (item.fullName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                            (item.email?.toLowerCase() || '').includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
         
         // Status filter with improved handling
@@ -430,7 +446,7 @@ const Userpage = () => {
                                     >
                                         {categories.map((cat) => (
                                             <option key={cat} value={cat} className="bg-[#343434]">
-                                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                                                {cat ? cat.charAt(0).toUpperCase() + cat.slice(1) : ''}
                                             </option>
                                         ))}
                                     </select>
@@ -564,18 +580,18 @@ const Userpage = () => {
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#ff5528] to-[#ff7d5a] flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 shadow-lg shadow-[#ff5528]/20">
                                                             <span className="text-white font-medium text-lg">
-                                                                {item.name.charAt(0).toUpperCase()}
+                                                                {item.fullName.charAt(0).toUpperCase()}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="ml-4">
                                                         <button 
-                                                            onClick={() => handleUserClick(item.name)}
+                                                            onClick={() => handleUserClick(item.fullName)}
                                                             className="text-sm font-medium text-white group-hover:text-[#ff5528] transition-colors duration-200 hover:underline"
                                                         >
-                                                            {item.name}
+                                                            {item.fullName}
                                                         </button>
-                                                        <div className="text-xs text-gray-400">Added {new Date(item.createdAt).toLocaleDateString()}</div>
+                                                        <div className="text-xs text-gray-400">Added date{new Date(item.createdAt).toLocaleDateString()}</div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -584,7 +600,7 @@ const Userpage = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#ff5528]/10 text-[#ff5528]">
-                                                    {item.category}
+                                                    {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorized'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -654,17 +670,17 @@ const Userpage = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#ff5528] to-[#ff7d5a] flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 shadow-lg shadow-[#ff5528]/20">
                                                     <span className="text-white font-medium text-lg">
-                                                        {item.name.charAt(0).toUpperCase()}
+                                                        {item.fullName.charAt(0).toUpperCase()}
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-medium text-white group-hover:text-[#ff5528] transition-colors duration-200">{item.name}</h3>
+                                                    <h3 className="text-lg font-medium text-white group-hover:text-[#ff5528] transition-colors duration-200">{item.fullName}</h3>
                                                     <p className="text-sm text-gray-400">{item.email}</p>
                                                 </div>
                                             </div>
                                             <div className="mt-4 flex items-center justify-between">
                                                 <span className="px-2 py-1 text-xs font-semibold rounded-full bg-[#ff5528]/10 text-[#ff5528]">
-                                                    {item.category}
+                                                    {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorized'}
                                                 </span>
                                                 <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs leading-5 font-semibold rounded-full ${getStatusColor(item.status)}`}>
                                                     {item.status && item.status.toLowerCase() === 'active' ? (
