@@ -96,7 +96,7 @@ const KYCApprovalPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold mb-2">Personal Information</h3>
-              <p><span className="font-medium">Name:</span> {request.name}</p>
+              <p><span className="font-medium">Name:</span> {request.fullName}</p>
               <p><span className="font-medium">Email:</span> {request.email}</p>
               <p><span className="font-medium">Phone:</span> {request.phone}</p>
               <p><span className="font-medium">Address:</span> {request.address}</p>
