@@ -139,7 +139,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Image
-                src="/Logo.png"
+                src="/logo-donation.png"
                 alt="Logo"
                 width={40}
                 height={40}
