@@ -1,9 +1,9 @@
 "use client";
 import { useAppContext } from "@/app/context/useContext";
 import { db } from "@/app/utils/firebaseConfig";
-import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import { collection, onSnapshot, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { Trash } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 const Page = () => {
   const { toast } = useToast();
   const { donations, setDonations } = useAppContext();
+  const [editingId, setEditingId] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
 
   // 🔄 Real-time Firestore data fetch
   useEffect(() => {
@@ -45,6 +47,31 @@ const Page = () => {
     }
   };
 
+  // 💾 Handle Amount Update
+  const handleAmountUpdate = async (id) => {
+    if (!editAmount) return;
+
+    try {
+      await updateDoc(doc(db, "donations", id), {
+        amount: Number(editAmount)
+      });
+      
+      toast({
+        title: "Success!",
+        description: "Amount updated successfully",
+        duration: 2000,
+      });
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error updating amount:", error);
+      toast({
+        title: "Error!",
+        description: "Failed to update amount",
+        duration: 2000,
+      });
+    }
+  };
+
   return (
     <div className="px-4">
       <div className="mb-8">
@@ -58,12 +85,12 @@ const Page = () => {
         <table className="min-w-full bg-white rounded-lg shadow-md">
           <thead className="bg-gray-100 border-b">
             <tr className="text-left text-sm font-semibold text-gray-700 font-[SairaSemibold] uppercase">
-              <th className="py-3 px-4">Name</th>
-              <th className="py-3 px-4">Email</th>
-              <th className="py-3 px-4">Number</th>
+              <th className="py-3 px-4">Donor Name</th>
+              <th className="py-3 px-4">Needy Name</th>
               <th className="py-3 px-4">Amount</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Time</th>
+              <th className="py-3 px-4">Donation Time</th>
+              {/* <th className="py-3 px-4">Email</th>
+              <th className="py-3 px-4">Number</th> */}
               <th className="py-3 px-4">Action</th>
             </tr>
           </thead>
@@ -78,23 +105,45 @@ const Page = () => {
                     {donate.donorName} 
                   </td>
                   <td className="py-4 px-4 text-gray-800 font-[SairaMedium]">
-                    {donate.donorEmail}
+                    {donate.needyName || 'N/A'} 
                   </td>
-                  <td className="py-4 px-4 text-gray-600 font-[SairaRegular]">
-                    {donate.donorPhone || "—"}
-                  </td>
-                
                   <td className="py-4 px-4 text-gray-600 font-[SairaMedium]">
-                    {donate.amount || 0}
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className="px-2 py-1 rounded-full text-sm font-[SairaMedium]">
-                      {donate.status === "Pending" ? "Pending" : "Completed"}
-                    </span>
+                    {editingId === donate.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleAmountUpdate(donate.id)}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <span 
+                        onClick={() => {
+                          setEditingId(donate.id);
+                          setEditAmount(donate.amount || "");
+                        }}
+                        className="cursor-pointer hover:text-blue-600"
+                      >
+                        {donate.amount || 0}
+                      </span>
+                    )}
                   </td>
                   <td className="py-4 px-4 w-60 text-gray-600 text-sm font-[SairaRegular]">
-                    {donate.timestamp.toDate().toLocaleString()
-}
+                    {donate.donatedAt ? new Date(donate.donatedAt.seconds * 1000).toLocaleString() : "_"}
                   </td>
                   <td className="py-4 px-4">
                     <Trash
