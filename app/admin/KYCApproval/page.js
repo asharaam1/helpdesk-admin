@@ -71,36 +71,68 @@ const KYCApprovalPage = () => {
   const handleApprove = async (userId) => {
     try {
       console.log('Approving KYC for user:', userId);
+      // Find the KYC request for this user
+      const kycRequest = kycRequests.find(request => request.userId === userId);
+      if (!kycRequest) {
+        console.error('No KYC request found for user:', userId);
+        toast.error('No KYC request found for this user');
+        return;
+      }
+
+      // Update the KYC request status
+      await updateDoc(doc(db, "kycRequests", kycRequest.id), {
+        status: "approved",
+        approvedAt: new Date().toISOString()
+      });
+
+      // Also update the user's KYC status
       await updateDoc(doc(db, "users", userId), {
         kycStatus: "approved",
         kycVerifiedAt: new Date().toISOString()
       });
       
       console.log('KYC approved successfully');
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, kycStatus: 'approved' } : user
-      ));
+      toast.success('KYC approved successfully');
+      
+      // Refresh both users and KYC requests
+      await Promise.all([fetchUsers(), fetchKYCRequests()]);
     } catch (error) {
       console.error('Error in KYC approval:', error);
-      setError('Failed to approve KYC');
+      toast.error('Failed to approve KYC');
     }
   };
 
   const handleReject = async (userId) => {
     try {
       console.log('Rejecting KYC for user:', userId);
+      // Find the KYC request for this user
+      const kycRequest = kycRequests.find(request => request.userId === userId);
+      if (!kycRequest) {
+        console.error('No KYC request found for user:', userId);
+        toast.error('No KYC request found for this user');
+        return;
+      }
+
+      // Update the KYC request status
+      await updateDoc(doc(db, "kycRequests", kycRequest.id), {
+        status: "rejected",
+        rejectedAt: new Date().toISOString()
+      });
+
+      // Also update the user's KYC status
       await updateDoc(doc(db, "users", userId), {
         kycStatus: "rejected",
         kycRejectedAt: new Date().toISOString()
       });
       
       console.log('KYC rejected successfully');
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, kycStatus: 'rejected' } : user
-      ));
+      toast.success('KYC rejected successfully');
+      
+      // Refresh both users and KYC requests
+      await Promise.all([fetchUsers(), fetchKYCRequests()]);
     } catch (error) {
       console.error('Error in KYC rejection:', error);
-      setError('Failed to reject KYC');
+      toast.error('Failed to reject KYC');
     }
   };
 
@@ -170,37 +202,43 @@ const KYCApprovalPage = () => {
                 <h3 className="text-lg font-semibold mb-4">KYC Documents</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {kycRequest.cnicFrontUrl && (
-            <div>
+                    <div>
                       <p className="text-sm font-medium text-gray-500 mb-2">CNIC Front</p>
-                      <img 
-                        src={kycRequest.cnicFrontUrl} 
-                        alt="CNIC Front" 
-                        className="rounded-lg max-w-full h-auto"
-                    />
-                  </div>
-                )}
+                      <div className="border rounded-lg overflow-hidden">
+                        <img 
+                          src={kycRequest.cnicFrontUrl} 
+                          alt="CNIC Front" 
+                          className="w-full h-[200px] object-contain bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                  )}
                   {kycRequest.cnicBackUrl && (
-                  <div>
+                    <div>
                       <p className="text-sm font-medium text-gray-500 mb-2">CNIC Back</p>
-                      <img 
-                        src={kycRequest.cnicBackUrl} 
-                        alt="CNIC Back" 
-                        className="rounded-lg max-w-full h-auto"
-                    />
-                  </div>
-                )}
+                      <div className="border rounded-lg overflow-hidden">
+                        <img 
+                          src={kycRequest.cnicBackUrl} 
+                          alt="CNIC Back" 
+                          className="w-full h-[200px] object-contain bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                  )}
                   {kycRequest.selfieUrl && (
-                  <div>
+                    <div>
                       <p className="text-sm font-medium text-gray-500 mb-2">Selfie Photo</p>
-                      <img 
-                        src={kycRequest.selfieUrl} 
-                        alt="Selfie Photo" 
-                        className="rounded-lg max-w-full h-auto"
-                    />
-                  </div>
-                )}
+                      <div className="border rounded-lg overflow-hidden">
+                        <img 
+                          src={kycRequest.selfieUrl} 
+                          alt="Selfie Photo" 
+                          className="w-full h-[200px] object-contain bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
             )}
 
             {kycRequest?.status === 'pending' && (
@@ -280,14 +318,14 @@ const KYCApprovalPage = () => {
                   const kycRequest = kycRequests.find(request => request.userId === user.id);
                   return (
                     <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{kycRequest?.address || 'Not provided'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{user.country || 'Not provided'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           !kycRequest || kycRequest.status === 'pending'
                             ? 'bg-yellow-100 text-yellow-800'
@@ -296,38 +334,38 @@ const KYCApprovalPage = () => {
                             : 'bg-red-100 text-red-800'
                         }`}>
                           {!kycRequest ? 'pending' : kycRequest.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => {
+                          <button
+                            onClick={() => {
                               setSelectedUser(user);
-                          setViewModalOpen(true);
-                        }}
+                              setViewModalOpen(true);
+                            }}
                             className="text-indigo-600 hover:text-indigo-900"
-                      >
+                          >
                             View Details
-                      </button>
+                          </button>
                           {(!kycRequest || kycRequest.status === 'pending') && (
                             <>
-                      <button
+                              <button
                                 onClick={() => handleApprove(user.id)}
-                        className="text-green-600 hover:text-green-900"
-                      >
+                                className="text-green-600 hover:text-green-900"
+                              >
                                 Approve
-                      </button>
-                      <button
+                              </button>
+                              <button
                                 onClick={() => handleReject(user.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
+                                className="text-red-600 hover:text-red-900"
+                              >
                                 Reject
-                      </button>
+                              </button>
                             </>
                           )}
-                    </div>
-                  </td>
-                </tr>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })
               )}

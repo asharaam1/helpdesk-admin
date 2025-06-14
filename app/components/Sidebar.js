@@ -61,7 +61,7 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     auth.signOut();
-    localStorage.removeItem("user");
+    localStorage.removeItem("users");
     router.push("/auth/Login");
   };
 

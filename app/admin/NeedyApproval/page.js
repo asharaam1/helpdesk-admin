@@ -23,17 +23,20 @@ const NeedyApprovalPage = () => {
   // Fetch needy users that need approval
   const fetchNeedyUsers = async () => {
     try {
+      console.log('Fetching needy users...');
       const q = query(
-        collection(db, "needyUsers"),
-        where("status", "==", "pending")
+        collection(db, "users"),
+        where("role", "==", "needy")
       );
       const querySnapshot = await getDocs(q);
       const users = [];
       querySnapshot.forEach((doc) => {
         users.push({ id: doc.id, ...doc.data() });
       });
+      console.log('Fetched needy users:', users);
       setNeedyUsers(users);
     } catch (error) {
+      console.error('Error in fetchNeedyUsers:', error);
       toast.error("Error fetching needy users");
     } finally {
       setLoading(false);
@@ -41,32 +44,91 @@ const NeedyApprovalPage = () => {
   };
 
   useEffect(() => {
+    console.log('Component mounted, fetching needy users...');
     fetchNeedyUsers();
   }, []);
 
   const handleApprove = async (userId) => {
     try {
-      await updateDoc(doc(db, "needyUsers", userId), {
+      console.log('Starting approval process for user:', userId);
+      console.log('Current needy users:', needyUsers);
+      
+      // Find the fund request for this user
+      const fundRequest = needyUsers.find(user => user.id === userId);
+      console.log('Found fund request:', fundRequest);
+      
+      if (!fundRequest) {
+        console.error('No fund request found for user:', userId);
+        toast.error('No fund request found for this user');
+        return;
+      }
+
+      console.log('Attempting to update fund request in Firebase...');
+      // Update the fund request status
+      const fundRequestRef = doc(db, "fundRequests", userId);
+      console.log('Fund request reference:', fundRequestRef);
+      
+      await updateDoc(fundRequestRef, {
         status: "approved",
-        approvedAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString()
       });
-      toast.success("User approved successfully");
-      fetchNeedyUsers(); // Refresh the list
+      
+      console.log('Fund request approved successfully in Firebase');
+      toast.success("Fund request approved successfully");
+      
+      console.log('Refreshing needy users list...');
+      await fetchNeedyUsers(); // Refresh the list
+      console.log('Needy users list refreshed');
     } catch (error) {
-      toast.error("Error approving user");
+      console.error('Detailed error in handleApprove:', {
+        error: error,
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      toast.error("Error approving fund request");
     }
   };
 
   const handleReject = async (userId) => {
     try {
-      await updateDoc(doc(db, "needyUsers", userId), {
+      console.log('Starting rejection process for user:', userId);
+      console.log('Current needy users:', needyUsers);
+      
+      // Find the fund request for this user
+      const fundRequest = needyUsers.find(user => user.id === userId);
+      console.log('Found fund request:', fundRequest);
+      
+      if (!fundRequest) {
+        console.error('No fund request found for user:', userId);
+        toast.error('No fund request found for this user');
+        return;
+      }
+
+      console.log('Attempting to update fund request in Firebase...');
+      // Update the fund request status
+      const fundRequestRef = doc(db, "fundRequests", userId);
+      console.log('Fund request reference:', fundRequestRef);
+      
+      await updateDoc(fundRequestRef, {
         status: "rejected",
-        rejectedAt: new Date().toISOString(),
+        rejectedAt: new Date().toISOString()
       });
-      toast.success("User rejected successfully");
-      fetchNeedyUsers(); // Refresh the list
+      
+      console.log('Fund request rejected successfully in Firebase');
+      toast.success("Fund request rejected successfully");
+      
+      console.log('Refreshing needy users list...');
+      await fetchNeedyUsers(); // Refresh the list
+      console.log('Needy users list refreshed');
     } catch (error) {
-      toast.error("Error rejecting user");
+      console.error('Detailed error in handleReject:', {
+        error: error,
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      toast.error("Error rejecting fund request");
     }
   };
 
@@ -81,9 +143,9 @@ const NeedyApprovalPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold mb-2">Personal Information</h3>
-              <p><span className="font-medium">Name:</span> {user.name}</p>
+              <p><span className="font-medium">Name:</span> {user.fullName}</p>
               <p><span className="font-medium">Email:</span> {user.email}</p>
-              <p><span className="font-medium">Phone:</span> {user.phone}</p>
+              <p><span className="font-medium">Phone:</span> {user.mobile}</p>
               <p><span className="font-medium">Address:</span> {user.address}</p>
             </div>
             
@@ -132,6 +194,7 @@ const NeedyApprovalPage = () => {
   };
 
   if (loading) {
+    console.log('Loading state:', loading);
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8 text-gray-800" />
@@ -142,6 +205,7 @@ const NeedyApprovalPage = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Needy Approval Requests</h1>
+      {console.log('Current needy users:', needyUsers)}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
@@ -170,14 +234,14 @@ const NeedyApprovalPage = () => {
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {user.name}
+                      {user.fullName}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{user.email}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{user.phone}</div>
+                    <div className="text-sm text-gray-500">{user.mobile}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">

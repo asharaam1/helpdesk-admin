@@ -8,6 +8,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { auth } from "@/app/utils/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import Link from "next/link";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/app/utils/firebaseConfig";
 
 const LoginPage = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -40,9 +42,27 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const res = await signInWithEmailAndPassword(auth, email, password);
+
+      // Check user role
+      const userDoc = await getDoc(doc(db, "users", res.user.uid));
+      console.log('User document:', userDoc.data());
+
+      if (!userDoc.exists()) {
+        toast.error("User not found!");
+        return;
+      }
+
+      const userData = userDoc.data();
+      if (userData.role !== "admin") {
+        toast.error("Access denied. Admin privileges required.");
+        await auth.signOut();
+        return;
+      }
+
       localStorage.setItem("userId", res.user.uid);
       router.push("/admin/Dashboard");
     } catch (err) {
+      console.error('Login error:', err);
       toast.error(err.message);
     } finally {
       setIsLoading(false);

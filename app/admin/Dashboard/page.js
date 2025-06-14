@@ -120,7 +120,7 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("adminId");
-    router.push("/auth/AdminLogin");
+    router.push("/auth/Login");
   };
 
   if (loading) {

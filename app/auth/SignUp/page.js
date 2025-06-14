@@ -5,7 +5,7 @@ import { auth, db } from "../../utils/firebaseConfig";
 import { User, Lock, Eye, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { addDoc, doc, setDoc } from "firebase/firestore";
+import {  doc, setDoc } from "firebase/firestore";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,13 +22,6 @@ const SignUpPage = () => {
     setPasswordVisible(!passwordVisible);
   };
 
-  // const AddUserToFirestore = async(){
-
-  //     addDoc
-           
-
-  // }
-
   const handleSignUp = async () => {
     if (!email || !password || !name) {
       toast.error("All fields are required");
@@ -42,7 +35,7 @@ const SignUpPage = () => {
         password
       );
       const uid = response.user.uid;
-      await setDoc(doc(db, "adminUsers", uid), { name, email });
+      await setDoc(doc(db, "users", uid), { name, email, role:"admin" });
       router.push("/admin/Dashboard");
     } catch (error) {
       toast.error(error.message);
