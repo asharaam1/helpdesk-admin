@@ -1,7 +1,7 @@
 "use client";
 import { useAppContext } from "@/app/context/useContext";
 import { db } from "@/app/utils/firebaseConfig";
-import { collection, onSnapshot, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { Trash } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
@@ -11,8 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 const Page = () => {
   const { toast } = useToast();
   const { donations, setDonations } = useAppContext();
-  const [editingId, setEditingId] = useState(null);
-  const [editAmount, setEditAmount] = useState("");
 
   // 🔄 Real-time Firestore data fetch
   useEffect(() => {
@@ -36,39 +34,43 @@ const Page = () => {
   // 🗑️ Handle Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this donation?")) {
-      await deleteDoc(doc(db, "donations", id));
-      setDonations((prevDonations) =>
-        prevDonations.filter((donation) => donation.id !== id)
-      );
-      toast({
-        title: "Success",
-        description: "Donation Deleted Successfully",
-      });
-    }
-  };
+      try {
+        // Get the donation data before deleting
+        const donationRef = doc(db, "donations", id);
+        const donationDoc = await getDoc(donationRef);
+        const donationData = donationDoc.data();
+        
+        // Delete the donation
+        await deleteDoc(donationRef);
+        
+        // Update amountRaised in funRequests if userId exists
+        if (donationData.userId) {
+          const funRequestRef = doc(db, "funRequests", donationData.userId);
+          const funRequestDoc = await getDoc(funRequestRef);
+          
+          if (funRequestDoc.exists()) {
+            const currentAmount = funRequestDoc.data().amountRaised || 0;
+            await updateDoc(funRequestRef, {
+              amountRaised: currentAmount - (donationData.amount || 0)
+            });
+          }
+        }
 
-  // 💾 Handle Amount Update
-  const handleAmountUpdate = async (id) => {
-    if (!editAmount) return;
-
-    try {
-      await updateDoc(doc(db, "donations", id), {
-        amount: Number(editAmount)
-      });
-      
-      toast({
-        title: "Success!",
-        description: "Amount updated successfully",
-        duration: 2000,
-      });
-      setEditingId(null);
-    } catch (error) {
-      console.error("Error updating amount:", error);
-      toast({
-        title: "Error!",
-        description: "Failed to update amount",
-        duration: 2000,
-      });
+        setDonations((prevDonations) =>
+          prevDonations.filter((donation) => donation.id !== id)
+        );
+        
+        toast({
+          title: "Success",
+          description: "Donation Deleted Successfully",
+        });
+      } catch (error) {
+        console.error("Error deleting donation:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete donation",
+        });
+      }
     }
   };
 
@@ -108,39 +110,7 @@ const Page = () => {
                     {donate.needyName || 'N/A'} 
                   </td>
                   <td className="py-4 px-4 text-gray-600 font-[SairaMedium]">
-                    {editingId === donate.id ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={editAmount}
-                          onChange={(e) => setEditAmount(e.target.value)}
-                          className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => handleAmountUpdate(donate.id)}
-                          className="text-green-600 hover:text-green-800"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <span 
-                        onClick={() => {
-                          setEditingId(donate.id);
-                          setEditAmount(donate.amount || "");
-                        }}
-                        className="cursor-pointer hover:text-blue-600"
-                      >
-                        {donate.amount || 0}
-                      </span>
-                    )}
+                    {donate.amount || 0}
                   </td>
                   <td className="py-4 px-4 w-60 text-gray-600 text-sm font-[SairaRegular]">
                     {donate.donatedAt ? new Date(donate.donatedAt.seconds * 1000).toLocaleString() : "_"}

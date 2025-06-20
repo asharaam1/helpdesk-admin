@@ -8,8 +8,9 @@ import {
   where,
   doc,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
-import { Loader2, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Eye, Trash2 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
@@ -133,6 +134,23 @@ const KYCApprovalPage = () => {
     } catch (error) {
       console.error('Error in KYC rejection:', error);
       toast.error('Failed to reject KYC');
+    }
+  };
+
+  // Delete KYC request for a user
+  const handleDeleteKYCRequest = async (userId) => {
+    try {
+      const kycRequest = kycRequests.find(request => request.userId === userId);
+      if (!kycRequest) {
+        toast.error('No KYC request found for this user');
+        return;
+      }
+      await deleteDoc(doc(db, "kycRequests", kycRequest.id));
+      toast.success('KYC request deleted successfully');
+      await fetchKYCRequests();
+    } catch (error) {
+      console.error('Error deleting KYC request:', error);
+      toast.error('Failed to delete KYC request');
     }
   };
 
@@ -304,36 +322,39 @@ const KYCApprovalPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Delete
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.length === 0 ? (
+              {kycRequests.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
-                    No users found
+                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                    No KYC requests found
                   </td>
                 </tr>
               ) : (
-                users.map((user) => {
-                  const kycRequest = kycRequests.find(request => request.userId === user.id);
+                kycRequests.map((kycRequest) => {
+                  const user = users.find(u => u.id === kycRequest.userId);
                   return (
-                    <tr key={user.id}>
+                    <tr key={kycRequest.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
+                        <div className="text-sm font-medium text-gray-900">{user ? user.fullName : null}</div>
+                        <div className="text-sm text-gray-500">{user ? user.email : null}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{user.country || 'Not provided'}</div>
+                        <div className="text-sm text-gray-900">{user ? (user.country || 'Not provided') : 'Not provided'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          !kycRequest || kycRequest.status === 'pending'
+                          kycRequest.status === 'pending'
                             ? 'bg-yellow-100 text-yellow-800'
                             : kycRequest.status === 'approved'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {!kycRequest ? 'pending' : kycRequest.status}
+                          {kycRequest.status || 'pending'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -347,7 +368,7 @@ const KYCApprovalPage = () => {
                           >
                             View Details
                           </button>
-                          {(!kycRequest || kycRequest.status === 'pending') && (
+                          {kycRequest.status === 'pending' && user && (
                             <>
                               <button
                                 onClick={() => handleApprove(user.id)}
@@ -364,6 +385,15 @@ const KYCApprovalPage = () => {
                             </>
                           )}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleDeleteKYCRequest(kycRequest.userId)}
+                          className="text-red-600 hover:text-red-900 flex items-center gap-1"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   );

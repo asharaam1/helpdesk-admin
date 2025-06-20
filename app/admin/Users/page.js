@@ -78,7 +78,7 @@ const Userpage = () => {
       setShowDeleteModal(false);
       setSelectedUser(null);
       getUsers();
-      alert("User deleted successfully");
+      // alert("User deleted successfully");
     } catch (error) {
       console.error("Error deleting user:", error);
       alert("Failed to delete user. Please try again.");
