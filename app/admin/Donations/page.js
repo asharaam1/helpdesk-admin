@@ -1,35 +1,16 @@
 "use client";
 import { useAppContext } from "@/app/context/useContext";
 import { db } from "@/app/utils/firebaseConfig";
-import { collection, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, deleteDoc, getDoc, updateDoc } from "firebase/firestore";
 import { Trash } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useToast } from "@/hooks/use-toast";
 
 const Page = () => {
   const { toast } = useToast();
-  const { donations, setDonations } = useAppContext();
-
-  // 🔄 Real-time Firestore data fetch
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, "donations"),
-      (snapshot) => {
-        const fetchedDonations = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setDonations(fetchedDonations);
-      },
-      (error) => {
-        console.error("Error fetching donations:", error);
-      }
-    );
-
-    return () => unsubscribe(); // cleanup
-  }, [setDonations]);
+  const { donations } = useAppContext();
 
   // 🗑️ Handle Delete
   const handleDelete = async (id) => {
@@ -56,10 +37,6 @@ const Page = () => {
           }
         }
 
-        setDonations((prevDonations) =>
-          prevDonations.filter((donation) => donation.id !== id)
-        );
-        
         toast({
           title: "Success",
           description: "Donation Deleted Successfully",
@@ -91,8 +68,6 @@ const Page = () => {
               <th className="py-3 px-4">Needy Name</th>
               <th className="py-3 px-4">Amount</th>
               <th className="py-3 px-4">Donation Time</th>
-              {/* <th className="py-3 px-4">Email</th>
-              <th className="py-3 px-4">Number</th> */}
               <th className="py-3 px-4">Action</th>
             </tr>
           </thead>
@@ -104,10 +79,10 @@ const Page = () => {
                   className="border-b border-gray-200 md:text-sm text-xs hover:bg-gray-100 transition-all duration-200"
                 >
                   <td className="py-4 px-4 text-gray-800 font-[SairaMedium]">
-                    {donate.donorName} 
+                    {donate.donorName}
                   </td>
                   <td className="py-4 px-4 text-gray-800 font-[SairaMedium]">
-                    {donate.needyName || 'N/A'} 
+                    {donate.needyName || 'N/A'}
                   </td>
                   <td className="py-4 px-4 text-gray-600 font-[SairaMedium]">
                     {donate.amount || 0}

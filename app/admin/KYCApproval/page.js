@@ -14,6 +14,7 @@ import { Loader2, CheckCircle, XCircle, Eye, Trash2 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
+import { useAppContext } from "@/app/context/useContext";
 
 const KYCApprovalPage = () => {
   const [kycRequests, setKycRequests] = useState([]);

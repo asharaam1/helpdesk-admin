@@ -22,12 +22,17 @@ export const AppProvider = ({ children }) => {
   const [events, setEvents] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [appointments, setAppointments] = useState([]);
-  const [donations, setDonations] = useState([]);
+  // const [donations, setDonations] = useState([]);
   const [inqueries, setInqueries] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [staff, setStaff] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [patients, setPatients] = useState([]);
+  
+  const [allUsers, setAllUsers] = useState(null);
+  const [donations, setDonations] = useState([]);
+  const [funds, setFunds] = useState([]);
+  const [kycRequests, setKycRequests] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -156,19 +161,19 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const fetchDonations = async () => {
-    try {
-      const donationsSnapshot = await getDocs(collection(db, "donations"));
-      const donation = donationsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setDonations(donation);
-      localStorage.setItem("donations", JSON.stringify(donation));
-    } catch (error) {
-      console.error("Error fetching order list:", error);
-    }
-  };
+  // const fetchDonations = async () => {
+  //   try {
+  //     const donationsSnapshot = await getDocs(collection(db, "donations"));
+  //     const donation = donationsSnapshot.docs.map((doc) => ({
+  //       id: doc.id,
+  //       ...doc.data(),
+  //     }));
+  //     setDonations(donation);
+  //     localStorage.setItem("donations", JSON.stringify(donation));
+  //   } catch (error) {
+  //     console.error("Error fetching order list:", error);
+  //   }
+  // };
 
   const fetchReviews = async () => {
     try {
@@ -226,16 +231,78 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+
+
+
+  const fetchAllUsers = async () => {
+    try {
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const users = usersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllUsers(users);
+      localStorage.setItem("users", JSON.stringify(users));
+    } catch (error) {
+      console.error("Error fetching order list:", error);
+    }
+  };
+  const fetchDonations = async () => {
+    try {
+      const donationsSnapshot = await getDocs(collection(db, "donations"));
+      const donation = donationsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setDonations(donation);
+      localStorage.setItem("donations", JSON.stringify(donation));
+    } catch (error) {
+      console.error("Error fetching order list:", error);
+    }
+  };
+  const fetchFunds = async () => {
+    try {
+      const fundsSnapshot = await getDocs(collection(db, "fundRequests"));
+      const funds = fundsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setFunds(funds);
+      localStorage.setItem("funds", JSON.stringify(funds));
+    } catch (error) {
+      console.error("Error fetching funds list:", error);
+    }
+  };
+  const fetchKYCRequests = async () => {
+    try {
+      const KYCRequestsSnapshot = await getDocs(collection(db, "kycRequests"));
+      const kyc = KYCRequestsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setKycRequests(kyc);
+      localStorage.setItem("KYCRequests", JSON.stringify(kyc));
+    } catch (error) {
+      console.error("Error fetching kyc list:", error);
+    }
+  };
+
+
   useEffect(() => {
     const fetchData = async () => {
       await Promise.all([
+        fetchAllUsers(),
+        fetchDonations(),
+        fetchFunds(),
+        fetchKYCRequests(),
+
         fetchStaff(),
         fetchEvents(),
         fetchDoctors(),
         fetchReviews(),
         fetchPatients(),
         fetchServices(),
-        fetchDonations(),
+        // fetchDonations(),
         fetchFacilities(),
         fetchSubscribers(),
         fetchAppointments(),
@@ -249,6 +316,15 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
+        allUsers,
+        donations,
+        funds,
+        kycRequests,
+        setAllUsers,
+        setDonations,
+        setFunds,
+        setKycRequests,
+
         user,
         staff,
         events,
@@ -256,7 +332,7 @@ export const AppProvider = ({ children }) => {
         doctors,
         patients,
         services,
-        donations,
+        // donations,
         inqueries,
         facilities,
         subscribers,
@@ -267,7 +343,7 @@ export const AppProvider = ({ children }) => {
         setDoctors,
         setPatients,
         setServices,
-        setDonations,
+        // setDonations,
         setInqueries,
         setFacilities,
         setSubscribers,

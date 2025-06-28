@@ -23,7 +23,8 @@ import {
   Contact,
   UserPlus,
   Bell,
-  Settings2
+  Settings2,
+  FileCheck
 } from "lucide-react";
 import { auth } from "../utils/firebaseConfig";
 import { usePathname, useRouter } from "next/navigation";
@@ -44,7 +45,8 @@ const Sidebar = () => {
     // { name: "Patients History", icon: Users, link: "/admin/Patients", path: "Patients" },
     // { name: "Appointments", icon: FileText, link: "/admin/Appointments", path: "Appointments" },
     // { name: "Events", icon: CalendarCheck, link: "/admin/Events", path: "Events" },
-    { name: "KYC Details", icon: UserPlus, link: "/admin/KYCApproval", path: "KYCApproval" },
+    { name: "KYC Details", icon: FileCheck, link: "/admin/KYCApproval", path: "KYCApproval" },
+    { name: "Fund Raises", icon: UserPlus, link: "/admin/NeedyApproval", path: "NeedyApproval" },
     { name: "Donations", icon: HandHeart, link: "/admin/Donations", path: "Donations" },
     // { name: "Web Info", icon: Aperture, link: "/admin/WebThings", path: "WebThings"  },
     { name: "Contact Inqueries", icon: Contact, link: "/admin/ContactInqueries", path: "ContactInqueries" },
